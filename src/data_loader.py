@@ -1,41 +1,34 @@
 import os
+from pathlib import Path
 import pandas as pd
 import streamlit as st
-from pathlib import Path
 
-# --- ALTERE APENAS ESTA LINHA ---
-DEFAULT_PATH = Path("data/raw/Climate_Change_Real_Physics.csv")
-# --------------------------------
+# caminho local padrão (repo root /data/climate.csv)
+DEFAULT_LOCAL = Path(__file__).resolve().parents[1] / "data" / "climate.csv"
+# fallback público raw do GitHub (substitua se necessário)
+GITHUB_RAW = "https://raw.githubusercontent.com/samueldssantos7-creator/Kaggle-dashboard/main/data/climate.csv"
 
 @st.cache_data
-def load_data(path: str | Path = DEFAULT_PATH) -> pd.DataFrame:
+def load_data(path: str | Path | None = None) -> pd.DataFrame:
     """
-    Carrega os dados CSV e guarda na memória (cache) para o site ficar rápido.
+    Carrega CSV local se existir, senão tenta o raw do GitHub.
+    Retorna DataFrame vazio em caso de falha (app trata ausência).
     """
-    path = Path(path)
-    
-    # Verifica se o arquivo existe
-    if not path.exists():
-        st.error(f"❌ Arquivo não encontrado em: {path}")
-        # Retorna um DataFrame vazio para não quebrar o app
-        return pd.DataFrame()
-    
-    try:
-        df = pd.read_csv(path)
-        # Limpeza básica: remove duplicatas se houver
-        df = df.drop_duplicates()
-        return df
-    except Exception as e:
-        st.error(f"Erro ao ler o arquivo: {e}")
-        return pd.DataFrame()
+    path = Path(path) if path else DEFAULT_LOCAL
 
-def load_data():
-    local = os.path.join(os.path.dirname(__file__), "..", "data", "climate.csv")
-    if os.path.exists(local):
-        return pd.read_csv(local)
-    # fallback para raw github (substitua USER/REPO/PATH)
-    url = "https://raw.githubusercontent.com/samueldssantos7-creator/Kaggle-dashboard/main/data/climate.csv"
+    # tenta local
+    if path.exists():
+        try:
+            df = pd.read_csv(path)
+            return df.drop_duplicates()
+        except Exception as e:
+            st.error(f"Erro ao ler o arquivo local {path}: {e}")
+            return pd.DataFrame()
+
+    # tenta raw no GitHub
     try:
-        return pd.read_csv(url)
-    except Exception:
+        df = pd.read_csv(GITHUB_RAW)
+        return df.drop_duplicates()
+    except Exception as e:
+        st.error(f"Não foi possível carregar dados local nem do GitHub. Erro: {e}")
         return pd.DataFrame()
