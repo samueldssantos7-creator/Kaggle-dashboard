@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import streamlit as st
 from pathlib import Path
@@ -26,4 +27,15 @@ def load_data(path: str | Path = DEFAULT_PATH) -> pd.DataFrame:
         return df
     except Exception as e:
         st.error(f"Erro ao ler o arquivo: {e}")
+        return pd.DataFrame()
+
+def load_data():
+    local = os.path.join(os.path.dirname(__file__), "..", "data", "climate.csv")
+    if os.path.exists(local):
+        return pd.read_csv(local)
+    # fallback para raw github (substitua USER/REPO/PATH)
+    url = "https://raw.githubusercontent.com/samueldssantos7-creator/Kaggle-dashboard/main/data/climate.csv"
+    try:
+        return pd.read_csv(url)
+    except Exception:
         return pd.DataFrame()
