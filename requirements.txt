@@ -5,5 +5,4 @@ shap==0.41.0
 matplotlib
 scikit-learn
 numpy
-# opcional se salvar imagens Plotly
 kaleido
